@@ -55,10 +55,75 @@ Quaternion const Quaternion::MakeFromAxisOfRotationAndAngleDegrees( Vec3 const& 
 //----------------------------------------------------------------------------------------------------------
 Quaternion const Quaternion::MakeFromMatrix( Mat44 const& matrix )
 {
-	UNUSED( matrix );
+	// Input matrix:
+	float m11 = matrix.m_values[ Mat44::Ix ], m12 = matrix.m_values[ Mat44::Jx ], m13 = matrix.m_values[ Mat44::Kx ];
+	float m21 = matrix.m_values[ Mat44::Iy ], m22 = matrix.m_values[ Mat44::Jy ], m23 = matrix.m_values[ Mat44::Ky ];
+	float m31 = matrix.m_values[ Mat44::Iz ], m32 = matrix.m_values[ Mat44::Jz ], m33 = matrix.m_values[ Mat44::Kz ];
 
-	// TODO: implement later
-	return Quaternion();
+	// Output quaternion
+	Quaternion result;
+
+	// Determine which of w, x, y, or z has the largest absolute value
+	float fourWSquaredMinus1	   = m11 + m22 + m33;
+	float fourXSquaredMinus1	   = m11 - m22 - m33;
+	float fourYSquaredMinus1	   = m22 - m11 - m33;
+	float fourZSquaredMinus1	   = m33 - m11 - m22;
+
+	int	  biggestIndex			   = 0;
+	float fourBiggestSquaredMinus1 = fourWSquaredMinus1;
+	if ( fourXSquaredMinus1 > fourBiggestSquaredMinus1 )
+	{
+		fourBiggestSquaredMinus1 = fourXSquaredMinus1;
+		biggestIndex			 = 1;
+	}
+	if ( fourYSquaredMinus1 > fourBiggestSquaredMinus1 )
+	{
+		fourBiggestSquaredMinus1 = fourYSquaredMinus1;
+		biggestIndex			 = 2;
+	}
+	if ( fourZSquaredMinus1 > fourBiggestSquaredMinus1 )
+	{
+		fourBiggestSquaredMinus1 = fourZSquaredMinus1;
+		biggestIndex			 = 3;
+	}
+
+	// Perform square root and division
+	float biggestVal = sqrtf( fourBiggestSquaredMinus1 + 1.0f ) * 0.5f;
+	float mult		 = 0.25f / biggestVal;
+
+	// Apply table to compute quaternion values
+	switch ( biggestIndex )
+	{
+	case 0:
+		result.w = biggestVal;
+		result.x = ( m32 - m23 ) * mult;
+		result.y = ( m13 - m31 ) * mult;
+		result.z = ( m21 - m12 ) * mult;
+		break;
+
+	case 1:
+		result.x = biggestVal;
+		result.w = ( m32 - m23 ) * mult;
+		result.y = ( m12 + m21 ) * mult;
+		result.z = ( m31 + m13 ) * mult;
+		break;
+
+	case 2:
+		result.y = biggestVal;
+		result.w = ( m13 - m31 ) * mult;
+		result.x = ( m12 + m21 ) * mult;
+		result.z = ( m23 + m32 ) * mult;
+		break;
+
+	case 3:
+		result.z = biggestVal;
+		result.w = ( m21 - m12 ) * mult;
+		result.x = ( m31 + m13 ) * mult;
+		result.y = ( m23 + m32 ) * mult;
+		break;
+	}
+
+	return result;
 }
 
 
