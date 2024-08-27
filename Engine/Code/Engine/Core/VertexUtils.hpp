@@ -70,6 +70,7 @@ void AddVertsForArrow3D( std::vector<Vertex_PCU>& verts, Vec3 const& start, Vec3
 void AddVertsForPlane3D( std::vector<Vertex_PCU>& verts, Plane3 const& plane3D, float width = 10.f, float height = 10.f, Rgba8 const& color = Rgba8::WHITE, AABB2 const& uvs = AABB2::ZERO_TO_ONE );
 void AddVertsForOBB3D( std::vector<Vertex_PCU>& verts, OBB3 const& obb3D, Rgba8 const& color = Rgba8::WHITE, AABB2 const& uvs = AABB2::ZERO_TO_ONE );
 void AddVertsForSectorRingWithArrow3D( std::vector<Vertex_PCU>& verts, Vec3 const& planeNormal, Vec3 const& sectorCenter, float sectorRadius, float sectorStartAngle, float sectorEndAngle, float ringThickness, float arrowRadius, int numSlices = 16, Rgba8 color = Rgba8::WHITE);
+void AddVertsForCapsuleZ3D( std::vector<Vertex_PCU>& verts, float boneLength, float radius, Rgba8 const& color = Rgba8::WHITE, int numberOfSegments = 16 );
 
 //----------------------------------------------------------------------------------------------------------
 // 3d indexed vertex addition

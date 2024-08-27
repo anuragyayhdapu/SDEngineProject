@@ -1600,3 +1600,78 @@ void AddVertsForSectorRingWithArrow3D( std::vector<Vertex_PCU>& verts, Vec3 cons
 
 	verts.insert( verts.end(), localVerts.begin(), localVerts.end() );
 }
+
+
+//----------------------------------------------------------------------------------------------------------
+void AddVertsForCapsuleZ3D( std::vector<Vertex_PCU>& verts, float boneLength, float radius, Rgba8 const& color, int numberOfSegments )
+{
+	// 1. create a Z cylinder with open ends
+	float	   segmenmtAngle			 = 360.f / numberOfSegments;
+	Quaternion rotor					 = Quaternion::MakeFromAxisOfRotationAndAngleDegrees( Vec3( 0.f, 0.f, 1.f ), segmenmtAngle );
+
+	Vec3	   cylinderBottomCenter		 = Vec3( 0.f, 0.f, radius );
+	Vec3	   pointOnCylinderBottomDisc = cylinderBottomCenter + Vec3( radius, 0.f, 0.f );			 // bottom left
+	Vec3	   pointOnCylinderTopDisc	 = pointOnCylinderBottomDisc + Vec3( 0.f, 0.f, boneLength ); // top left
+
+	for ( int segmentNumber = 0; segmentNumber < numberOfSegments; segmentNumber++ )
+	{
+		Vec3 rotatedPointOnCylinderBottomDisc = rotor * pointOnCylinderBottomDisc;								 // bottom right
+		Vec3 rotatedPointOnCylinderTopDisc	  = rotatedPointOnCylinderBottomDisc + Vec3( 0.f, 0.f, boneLength ); // top right
+
+		AddVertsForQuad3D( verts, pointOnCylinderBottomDisc, rotatedPointOnCylinderBottomDisc, rotatedPointOnCylinderTopDisc, pointOnCylinderTopDisc, color );
+
+		pointOnCylinderBottomDisc = rotatedPointOnCylinderBottomDisc;
+		pointOnCylinderTopDisc	  = rotatedPointOnCylinderTopDisc;
+	}
+
+	// 2. create top hemisphere
+
+	Quaternion yawRotor	   = Quaternion::MakeFromAxisOfRotationAndAngleDegrees( Vec3( 0.f, 0.f, 1.f ), segmenmtAngle );
+	Quaternion pitchRotor  = Quaternion::MakeFromAxisOfRotationAndAngleDegrees( Vec3( 0.f, -1.f, 0.f ), segmenmtAngle * 0.5f );
+	Vec3	   bottomLeft  = Vec3( radius, 0.f, 0.f );
+	Vec3	   topLeft	   = pitchRotor * bottomLeft;
+	
+	for (int pitchSegmentIndex = 0; pitchSegmentIndex < numberOfSegments * 0.5f; pitchSegmentIndex++)
+	{
+		for ( int segmentIndex = 0; segmentIndex < numberOfSegments; segmentIndex++ )
+		{
+			Vec3 topRight	 = yawRotor * topLeft;
+			Vec3 bottomRight = yawRotor * bottomLeft;
+
+			Vec3 topTranslation = Vec3( 0.f, 0.f, radius + boneLength );
+			AddVertsForQuad3D( verts, bottomLeft + topTranslation, bottomRight + topTranslation, 
+				topRight + topTranslation, topLeft + topTranslation, color );
+
+			bottomLeft = bottomRight;
+			topLeft	   = topRight;
+		}
+
+		bottomLeft = topLeft;
+		topLeft	   = pitchRotor * bottomLeft;
+	}
+
+
+	// 3. create bottom hemisphere
+	pitchRotor = pitchRotor.GetInverse();
+	topLeft	   = Vec3( radius, 0.f, 0.f );
+	bottomLeft = pitchRotor * topLeft;
+
+	for ( int pitchSegmentIndex = 0; pitchSegmentIndex < numberOfSegments * 0.5f; pitchSegmentIndex++ )
+	{
+		for ( int segmentIndex = 0; segmentIndex < numberOfSegments; segmentIndex++ )
+		{
+			Vec3 topRight		= yawRotor * topLeft;
+			Vec3 bottomRight	= yawRotor * bottomLeft;
+
+			Vec3 translation = Vec3( 0.f, 0.f, radius );
+			AddVertsForQuad3D( verts, bottomLeft + translation, bottomRight + translation,
+				topRight + translation, topLeft + translation, color );
+
+			bottomLeft = bottomRight;
+			topLeft	   = topRight;
+		}
+
+		topLeft = bottomLeft;
+		bottomLeft	= pitchRotor * topLeft;
+	}
+}
