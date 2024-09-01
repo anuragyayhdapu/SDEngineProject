@@ -58,7 +58,7 @@ EmptyLineBeforeAccessModifier: Leave
 
 AlignConsecutiveDeclarations:
   Enabled: true
-  AcrossEmptyLines: true
+  AcrossEmptyLines: false
   AcrossComments: false
 
 AlignTrailingComments: true

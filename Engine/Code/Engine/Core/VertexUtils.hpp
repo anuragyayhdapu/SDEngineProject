@@ -64,12 +64,14 @@ void AddVertsForQuad3D(std::vector<Vertex_PCU>& verts, Vec3 const& bottomLeft, V
 void AddVertsForAABB3D(std::vector<Vertex_PCU>& verts, AABB3 const& bounds, Rgba8 const& color, Vec2 uvAtMins = Vec2::ZERO, Vec2 uvAtMaxs = Vec2::ONE);
 void AddVertsForCylinderZ3D(std::vector<Vertex_PCU>& verts, Vec2 const& centerXY, FloatRange const& minMaxZ, float radius, int numSlices, Rgba8 const& tint = Rgba8::WHITE, AABB2 const& uvs = AABB2::ZERO_TO_ONE);
 void AddVertsForCylinder3D(std::vector<Vertex_PCU>& verts, Vec3 const& start, Vec3 const& end, float radius, Rgba8 const& color = Rgba8::WHITE, AABB2 const& uvs = AABB2::ZERO_TO_ONE, int numSlices = 16);
-void AddVertsForCone3D(std::vector<Vertex_PCU>& verts, Vec3 const& start, Vec3 const& end, float radius, Rgba8 const& color = Rgba8::WHITE, AABB2 const& uvs = AABB2::ZERO_TO_ONE, int numSlices = 16);
+void AddVertsForOpenEndedCylinder3D( std::vector<Vertex_PCU>& verts, Vec3 const& start, Vec3 const& end, float radius, Rgba8 const& color = Rgba8::WHITE, int numberOfSegments = 16 );
+void AddVertsForCone3D( std::vector<Vertex_PCU>& verts, Vec3 const& start, Vec3 const& end, float radius, Rgba8 const& color = Rgba8::WHITE, AABB2 const& uvs = AABB2::ZERO_TO_ONE, int numSlices = 16 );
 void AddVertsForSphere3D(std::vector<Vertex_PCU>& verts, Vec3 const& center, float radius, Rgba8 const& color = Rgba8::WHITE, AABB2 const& uvs = AABB2::ZERO_TO_ONE, int numLatitudeSlices = 16);
 void AddVertsForArrow3D( std::vector<Vertex_PCU>& verts, Vec3 const& start, Vec3 const& end, float radius, Rgba8 const& color = Rgba8::WHITE, AABB2 const& uvs = AABB2::ZERO_TO_ONE, int numSlices = 16 );
 void AddVertsForPlane3D( std::vector<Vertex_PCU>& verts, Plane3 const& plane3D, float width = 10.f, float height = 10.f, Rgba8 const& color = Rgba8::WHITE, AABB2 const& uvs = AABB2::ZERO_TO_ONE );
 void AddVertsForOBB3D( std::vector<Vertex_PCU>& verts, OBB3 const& obb3D, Rgba8 const& color = Rgba8::WHITE, AABB2 const& uvs = AABB2::ZERO_TO_ONE );
-void AddVertsForSectorRingWithArrow3D( std::vector<Vertex_PCU>& verts, Vec3 const& planeNormal, Vec3 const& sectorCenter, float sectorRadius, float sectorStartAngle, float sectorEndAngle, float ringThickness, float arrowRadius, int numSlices = 16, Rgba8 color = Rgba8::WHITE);
+void AddVertsForRing3D( std::vector<Vertex_PCU>& verts, Vec3 const& normal, float radius, float frameThickness = 0.1f, Rgba8 color = Rgba8::WHITE, int numberOfSegments = 16 );
+void AddVertsForSectorRingWithArrow3D( std::vector<Vertex_PCU>& verts, Vec3 const& planeNormal, Vec3 const& sectorCenter, float sectorRadius, float sectorStartAngle, float sectorEndAngle, float ringThickness, float arrowRadius, int numSlices = 16, Rgba8 color = Rgba8::WHITE );
 void AddVertsForCapsuleZ3D( std::vector<Vertex_PCU>& verts, float boneLength, float radius, Rgba8 const& color = Rgba8::WHITE, int numberOfSegments = 16 );
 
 //----------------------------------------------------------------------------------------------------------
@@ -90,7 +92,7 @@ void AddVertsForSphere3DPCUTBN(std::vector<Vertex_PCUTBN>& verts, std::vector<un
 // 3d wireframe
 void AddVertsForWireframeAABB3D(std::vector<Vertex_PCU>& verts, AABB3 const& bounds, float frameThickness = 0.1f, Rgba8 const& color = Rgba8::WHITE);
 void AddVertsForWireframeQuad3D(std::vector<Vertex_PCU>& verts, Vec3 const& bottomLeft, Vec3 const& bottomRight, Vec3 const& topRight, Vec3 const& topLeft, float frameThickness = 0.1f, Rgba8 const& color = Rgba8::WHITE);
-
+void AddVertsForWireframeCapsuleZ3D( std::vector<Vertex_PCU>& verts, float boneLength, float radius, float frameThickness = 0.1f, Rgba8 color = Rgba8::WHITE, int numberOfCapsuleSegments = 16, int numberOfFrameSegments = 8 );
 
 //----------------------------------------------------------------------------------------------------------
 // 3d line primitive

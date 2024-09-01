@@ -1675,3 +1675,62 @@ void AddVertsForCapsuleZ3D( std::vector<Vertex_PCU>& verts, float boneLength, fl
 		bottomLeft	= pitchRotor * topLeft;
 	}
 }
+
+
+//----------------------------------------------------------------------------------------------------------
+void AddVertsForOpenEndedCylinder3D( std::vector<Vertex_PCU>& verts, Vec3 const& start, Vec3 const& end, float radius, Rgba8 const& color, int numberOfSegments )
+{
+	/*AddVertsForSphere3D( verts, start, 0.2f, Rgba8::RED );
+	AddVertsForSphere3D( verts, end, 0.2f, Rgba8::BLUE );*/
+
+	Vec3 cylinderBone = end - start;
+	Vec3 kUp		  = cylinderBone.GetNormalized();
+	Vec3 worldUp	  = Vec3( 0.f, 0.f, 1.f );
+	Vec3 worldFwd	  = Vec3( 1.f, 0.f, 0.f );
+
+	Vec3 vectorOnCylinder;
+	if (kUp != worldUp && kUp != -1.f * worldUp)
+	{
+		vectorOnCylinder = CrossProduct3D( worldUp, kUp );
+	}
+	else
+	{
+		vectorOnCylinder = CrossProduct3D( worldFwd, kUp );
+	}
+
+	vectorOnCylinder.SetLength( radius );
+
+	float	   angleOfRotationDegrees = 360.f / numberOfSegments;
+	Quaternion rotor				  = Quaternion::MakeFromAxisOfRotationAndAngleDegrees( kUp, angleOfRotationDegrees );
+
+	for (int segmentIndex = 0; segmentIndex < numberOfSegments; segmentIndex++)
+	{
+		Vec3 bottomLeft = vectorOnCylinder + start;
+		Vec3 topLeft	= vectorOnCylinder + end;
+
+		vectorOnCylinder = rotor * vectorOnCylinder;
+
+		Vec3 bottomRight = vectorOnCylinder + start;
+		Vec3 topRight	 = vectorOnCylinder + end;
+		
+		AddVertsForQuad3D( verts, bottomLeft, bottomRight, topRight, topLeft, color );
+	}
+}
+
+
+//----------------------------------------------------------------------------------------------------------
+void AddVertsForRing3D( std::vector<Vertex_PCU>& verts, Vec3 const& normal, float radius, float frameThickness, Rgba8 color, int numberOfSegments )
+{
+	float angleOfRotationDegrees = 360.f / numberOfSegments;
+	Quaternion rotor				  = Quaternion::MakeFromAxisOfRotationAndAngleDegrees( normal, angleOfRotationDegrees );
+
+	// get a vector on the ring
+	//Vec3 
+}
+
+
+//----------------------------------------------------------------------------------------------------------
+void AddVertsForWireframeCapsuleZ3D( std::vector<Vertex_PCU>& verts, float boneLength, float radius, float frameThickness, Rgba8 color, int numberOfCapsuleSegments, int numberOfFrameSegments )
+{
+
+}
