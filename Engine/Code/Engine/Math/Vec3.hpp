@@ -56,6 +56,8 @@ public:
 
 	void SetFromText(char const* text);
 
+	void SetLength( float newLength );
+
 public:
 	static Vec3 const ZERO;
 };

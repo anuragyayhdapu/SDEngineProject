@@ -197,3 +197,12 @@ void Vec3::SetFromText(char const* text)
 	y = ( float ) atof(yStr.c_str());
 	z = ( float ) atof(zStr.c_str());
 }
+
+
+void Vec3::SetLength( float newLength )
+{
+	float uniformScale = newLength / GetLength();
+	x				   *= uniformScale;
+	y				   *= uniformScale;
+	z				   *= uniformScale;
+}
