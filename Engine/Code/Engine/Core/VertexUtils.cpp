@@ -6,6 +6,9 @@
 #include "Engine/Core/EngineCommon.hpp"
 
 
+constexpr float MARGIN_OF_ERROR = 0.000001f;
+
+
 void TransformVertexArrayXY3D( int numVerts, Vertex_PCU* verts, float uniformScale,
 	float rotationDegreeAboutZ, Vec2 const& translationXY )
 {
@@ -1719,18 +1722,76 @@ void AddVertsForOpenEndedCylinder3D( std::vector<Vertex_PCU>& verts, Vec3 const&
 
 
 //----------------------------------------------------------------------------------------------------------
-void AddVertsForRing3D( std::vector<Vertex_PCU>& verts, Vec3 const& normal, float radius, float frameThickness, Rgba8 color, int numberOfSegments )
+void AddVertsForRing3D( std::vector<Vertex_PCU>& verts, Vec3 const& ringCenter, Vec3 const& planeNormal, float radius, float frameThickness, Rgba8 color, int numberOfRingSegments, int numberOfCylinderSegments)
 {
-	float angleOfRotationDegrees = 360.f / numberOfSegments;
-	Quaternion rotor				  = Quaternion::MakeFromAxisOfRotationAndAngleDegrees( normal, angleOfRotationDegrees );
+	float	   angleOfRotationDegrees = 360.f / numberOfRingSegments;
+	Quaternion ringRotor				  = Quaternion::MakeFromAxisOfRotationAndAngleDegrees( planeNormal, angleOfRotationDegrees );
 
 	// get a vector on the ring
-	//Vec3 
+	Vec3 worldUp = Vec3( 0.f, 0.f, 1.f );
+	Vec3 worldFwd = Vec3( 1.f, 0.f, 0.f );
+	Vec3 vectorOnRingPlane = CrossProduct3D( worldUp, planeNormal );
+	if ( vectorOnRingPlane.IsEqualWithinMarginOfError( Vec3::ZERO ) )
+	{
+		vectorOnRingPlane = CrossProduct3D( worldFwd, planeNormal );
+	}
+	vectorOnRingPlane.SetLength( radius );
+
+	// draw ring, one cylinder segment at a time
+	float segmentRadius = frameThickness * 0.5f;
+	float cylinderSegmentAngleOfRotationDegrees = 360.f / numberOfCylinderSegments;
+	for ( int ringSegmentIndex = 0; ringSegmentIndex < numberOfRingSegments; ringSegmentIndex++ )
+	{
+		Vec3 rotatedVectorOnRingPlane  = ringRotor * vectorOnRingPlane;
+
+		Vec3 segmentStartRadiusVector  = vectorOnRingPlane;
+		segmentStartRadiusVector.SetLength( segmentRadius );
+		Vec3 segmentEndRadiusVector = rotatedVectorOnRingPlane;
+		segmentEndRadiusVector.SetLength( segmentRadius );
+
+		Vec3 segmentStartAxisOfRotation = rotatedVectorOnRingPlane - vectorOnRingPlane;
+		segmentStartAxisOfRotation.Normalize();
+		Vec3 doubleRotatedVectorOnRingPlane = ringRotor * rotatedVectorOnRingPlane;
+		Vec3 segmentEndAxisOfRotation		= doubleRotatedVectorOnRingPlane - rotatedVectorOnRingPlane;
+		segmentEndAxisOfRotation.Normalize();
+		Quaternion segmentStartRotor = Quaternion::MakeFromAxisOfRotationAndAngleDegrees( segmentStartAxisOfRotation, cylinderSegmentAngleOfRotationDegrees );
+		Quaternion segmentEndRotor	 = Quaternion::MakeFromAxisOfRotationAndAngleDegrees( segmentEndAxisOfRotation, cylinderSegmentAngleOfRotationDegrees );
+
+		Vec3 segmentStartCenter		 = ringCenter + vectorOnRingPlane;
+		Vec3 segmentEndCenter		 = ringCenter + rotatedVectorOnRingPlane;
+
+		// draw an open ended cylinder using two radii
+		for ( int cylinderSegmentIndex = 0; cylinderSegmentIndex < numberOfCylinderSegments; cylinderSegmentIndex++ )
+		{
+			Vec3 rotatedSegmentStartRadiusVector = segmentStartRotor * segmentStartRadiusVector;
+			Vec3 rotatedSegmentEndRadiusVector	 = segmentEndRotor * segmentEndRadiusVector;
+
+			Vec3 bottomLeft						 = segmentStartRadiusVector + segmentStartCenter;
+			Vec3 bottomRight					 = rotatedSegmentStartRadiusVector + segmentStartCenter;
+			Vec3 topLeft						 = segmentEndRadiusVector + segmentEndCenter;
+			Vec3 topRight						 = rotatedSegmentEndRadiusVector + segmentEndCenter;
+			AddVertsForQuad3D( verts, bottomLeft, bottomRight, topRight, topLeft, color );
+
+			segmentStartRadiusVector = rotatedSegmentStartRadiusVector;
+			segmentEndRadiusVector	 = rotatedSegmentEndRadiusVector;
+		}
+
+		vectorOnRingPlane = rotatedVectorOnRingPlane;
+	}
 }
 
 
 //----------------------------------------------------------------------------------------------------------
 void AddVertsForWireframeCapsuleZ3D( std::vector<Vertex_PCU>& verts, float boneLength, float radius, float frameThickness, Rgba8 color, int numberOfCapsuleSegments, int numberOfFrameSegments )
 {
+	// top ring
+
+	// bottom ring
+
+	// 4 pillars around the cylinder
+
+	// top 2 curved wires / or half rings
+
+	// bottom 2 curved wires / or half rings
 
 }
