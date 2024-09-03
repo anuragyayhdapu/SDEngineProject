@@ -48,6 +48,8 @@ public:
 	void operator *=(float uniformScale);						// vec3 *= float
 	void operator /=(float uniformScale);						// vec3 /= float
 
+	bool IsEqualWithinMarginOfError( Vec3 const& vectorToCompare, float marginOfError = 0.000001f );
+
 
 	friend const Vec3 operator*(float uniformScale, const Vec3& vecToMultiply);	// float * vec3
 

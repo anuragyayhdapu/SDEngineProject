@@ -199,10 +199,27 @@ void Vec3::SetFromText(char const* text)
 }
 
 
+//----------------------------------------------------------------------------------------------------------
 void Vec3::SetLength( float newLength )
 {
 	float uniformScale = newLength / GetLength();
 	x				   *= uniformScale;
 	y				   *= uniformScale;
 	z				   *= uniformScale;
+}
+
+
+//----------------------------------------------------------------------------------------------------------
+bool Vec3::IsEqualWithinMarginOfError( Vec3 const& vectorToCompare, float marginOfError )
+{
+	if (fabsf(x - vectorToCompare.x) <= marginOfError &&
+		fabsf(y - vectorToCompare.y) <= marginOfError &&
+		fabsf(z - vectorToCompare.z) <= marginOfError)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
