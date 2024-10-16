@@ -1013,13 +1013,13 @@ void AddVertsForArrow3D( std::vector<Vertex_PCU>& verts, Vec3 const& start, Vec3
 	Vec3  direction		 = displacement.GetNormalized();
 	float length		 = displacement.GetLength();
 	float cylinderLength = 0.7f * length;
-	float coneLength	 = 10.f * radius;
+	//float coneLength	 = 10.f * radius;
 	float conreRadius	 = 3.f * radius;
 
-	Vec3 cylinderStart = start;
-	Vec3 cylinderEnd   = cylinderStart + ( direction * cylinderLength );
-	Vec3 coneStart	   = cylinderEnd;
-	Vec3 coneEnd	   = coneStart + ( direction * coneLength );
+	Vec3 cylinderStart	 = start;
+	Vec3 cylinderEnd	 = cylinderStart + ( direction * cylinderLength );
+	Vec3 coneStart		 = cylinderEnd;
+	Vec3 coneEnd		 = end;
 
 	AddVertsForCone3D( verts, coneStart, coneEnd, conreRadius, color, uvs, numSlices );
 	AddVertsForCylinder3D( verts, cylinderStart, cylinderEnd, radius, color, uvs, numSlices );
@@ -1782,16 +1782,100 @@ void AddVertsForRing3D( std::vector<Vertex_PCU>& verts, Vec3 const& ringCenter, 
 
 
 //----------------------------------------------------------------------------------------------------------
+void AddVertsForHalfRing3DHelper( std::vector<Vertex_PCU>& verts, Vec3 const& ringCenter, Vec3 const& ringRadiusVector, Vec3 const& ringRotationAxis, float frameThickness, Rgba8 color, int numberOfCapsuleSegments, int numberOfFrameSegments );
 void AddVertsForWireframeCapsuleZ3D( std::vector<Vertex_PCU>& verts, float boneLength, float radius, float frameThickness, Rgba8 color, int numberOfCapsuleSegments, int numberOfFrameSegments )
 {
-	// top ring
-
 	// bottom ring
+	Vec3 bottomRingCenter = Vec3( 0.f, 0.f, radius );
+	Vec3 ringNormal		  = Vec3( 0.f, 0.f, 1.f );
+	AddVertsForRing3D( verts, bottomRingCenter, ringNormal, radius, frameThickness, color, numberOfCapsuleSegments, numberOfFrameSegments );
+
+	// top ring
+	Vec3 topRingCenter = Vec3( 0.f, 0.f, radius + boneLength );
+	AddVertsForRing3D( verts, topRingCenter, ringNormal, radius, frameThickness, color, numberOfCapsuleSegments, numberOfFrameSegments );
 
 	// 4 pillars around the cylinder
+	float pillarRadius = frameThickness * 0.5f;
+
+	// east pillar
+	Vec3 eastPillarBottom = bottomRingCenter + Vec3( radius, 0.f, 0.f );
+	Vec3 eastPillarTop	  = topRingCenter + Vec3( radius, 0.f, 0.f );
+	AddVertsForOpenEndedCylinder3D( verts, eastPillarBottom, eastPillarTop, pillarRadius, color, numberOfFrameSegments );
+
+	// west pillar
+	Vec3 westPillarBottom = bottomRingCenter + Vec3( -radius, 0.f, 0.f );
+	Vec3 westPillarTop	  = topRingCenter + Vec3( -radius, 0.f, 0.f );
+	AddVertsForOpenEndedCylinder3D( verts, westPillarBottom, westPillarTop, pillarRadius, color, numberOfFrameSegments );
+
+	// north pillar
+	Vec3 northPillarBottom = bottomRingCenter + Vec3( 0.f, radius, 0.f );
+	Vec3 northPillarTop	   = topRingCenter + Vec3( 0.f, radius, 0.f );
+	AddVertsForOpenEndedCylinder3D( verts, northPillarBottom, northPillarTop, pillarRadius, color, numberOfFrameSegments );
+
+	// south pillar
+	Vec3 southPillarBottom = bottomRingCenter + Vec3( 0.f, -radius, 0.f );
+	Vec3 southPillarTop	   = topRingCenter + Vec3( 0.f, -radius, 0.f );
+	AddVertsForOpenEndedCylinder3D( verts, southPillarBottom, southPillarTop, pillarRadius, color, numberOfFrameSegments );
 
 	// top 2 curved wires / or half rings
+	// east to west
+	AddVertsForHalfRing3DHelper( verts, topRingCenter, Vec3(radius, 0.f, 0.f), Vec3(0.f, -1.f, 0.f), frameThickness, color, numberOfCapsuleSegments, numberOfFrameSegments );
+
+	// north to south
+	AddVertsForHalfRing3DHelper( verts, topRingCenter, Vec3( 0.f, radius, 0.f ), Vec3( 1.f, 0.f, 0.f ), frameThickness, color, numberOfCapsuleSegments, numberOfFrameSegments );
 
 	// bottom 2 curved wires / or half rings
+	// east to west
+	AddVertsForHalfRing3DHelper( verts, bottomRingCenter, Vec3( radius, 0.f, 0.f ), Vec3( 0.f, 1.f, 0.f ), frameThickness, color, numberOfCapsuleSegments, numberOfFrameSegments );
+	// north to south
+	AddVertsForHalfRing3DHelper( verts, bottomRingCenter, Vec3( 0.f, radius, 0.f ), Vec3( -1.f, 0.f, 0.f ), frameThickness, color, numberOfCapsuleSegments, numberOfFrameSegments );
+}
 
+
+//----------------------------------------------------------------------------------------------------------
+void AddVertsForHalfRing3DHelper( std::vector<Vertex_PCU>& verts, Vec3 const& ringCenter, Vec3 const& ringRadiusVector, Vec3 const& ringRotationAxis, float frameThickness, Rgba8 color, int numberOfCapsuleSegments, int numberOfFrameSegments )
+{
+	Vec3	   radiusVec   = ringRadiusVector;
+	Quaternion rotor	   = Quaternion::MakeFromAxisOfRotationAndAngleDegrees( ringRotationAxis, 360.f / numberOfCapsuleSegments );
+
+	int numHalfRingSectors = int(numberOfCapsuleSegments * 0.5f);
+	for ( int halfRingSectorIndex = 0; halfRingSectorIndex < numHalfRingSectors; halfRingSectorIndex++ )
+	{
+		Vec3 rotatedRadiusVec		= rotor * radiusVec;
+		Vec3 doubleRotatedRadiusVec = rotor * rotatedRadiusVec;
+
+		Vec3 cylinderBottomAxis		= rotatedRadiusVec - radiusVec;
+		cylinderBottomAxis.Normalize();
+		Vec3 cylinderTopAxis = doubleRotatedRadiusVec - rotatedRadiusVec;
+		cylinderTopAxis.Normalize();
+		Quaternion topRotor	   = Quaternion::MakeFromAxisOfRotationAndAngleDegrees( cylinderTopAxis, 360.f / numberOfFrameSegments );
+		Quaternion bottomRotor = Quaternion::MakeFromAxisOfRotationAndAngleDegrees( cylinderBottomAxis, 360.f / numberOfFrameSegments );
+
+		Vec3 bottomVec		   = radiusVec;
+		bottomVec.SetLength( frameThickness * 0.5f );
+		Vec3 topVec = rotatedRadiusVec;
+		topVec.SetLength( frameThickness * 0.5f );
+
+		// AddVertsForArrow3D( verts, topRingCenter, topRingCenter + A, frameThickness * 0.25f );
+		// AddVertsForArrow3D( verts, topRingCenter, topRingCenter + B, frameThickness * 0.25f, Rgba8::RED );
+
+		Vec3 bottomDisplacement = ringCenter + radiusVec;
+		Vec3 topDisplacement	= ringCenter + rotatedRadiusVec;
+
+		for ( int cylinderFrameIndex = 0; cylinderFrameIndex < numberOfFrameSegments; cylinderFrameIndex++ )
+		{
+			Vec3 rotatedBottomVec = bottomRotor * bottomVec;
+			Vec3 rotatedTopVec	  = topRotor * topVec;
+
+			AddVertsForQuad3D( verts, bottomDisplacement + bottomVec, bottomDisplacement + rotatedBottomVec,
+				topDisplacement + rotatedTopVec, topDisplacement + topVec, color );
+
+			bottomVec = rotatedBottomVec;
+			topVec	  = rotatedTopVec;
+		}
+
+		radiusVec			   = rotatedRadiusVec;
+		rotatedRadiusVec	   = doubleRotatedRadiusVec;
+		doubleRotatedRadiusVec = rotor * doubleRotatedRadiusVec;
+	}
 }
